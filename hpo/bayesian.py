@@ -10,7 +10,7 @@ def configs_to_dataframe(configs, features):
     return df
 
 def compute_ei(space, data, n_challengers = 1000):
-    features = data.drop(columns=["seed", "identifier", "accuracy", "firing_rate", "balance"])
+    features = data.drop(columns=["seed", "identifier", "accuracy", "firing_rate", "balance_median", "balance_lowpass"])
     surrogate_acc = GPR()
     surrogate_acc.fit(features, data["accuracy"])
     
@@ -29,9 +29,9 @@ def compute_ei(space, data, n_challengers = 1000):
 def compute_constrained_ei(data, challengers_df, ei_vals, balance_constraint, fr_constraint):
     surrogate_balance, surrogate_fr = GPR(), GPR()
     
-    features = data.drop(columns=["seed","identifier", "accuracy", "firing_rate", "balance"])
+    features = data.drop(columns=["seed","identifier", "accuracy", "firing_rate", "balance_median", "balance_lowpass"])
     
-    surrogate_balance.fit(features, data["balance"])
+    surrogate_balance.fit(features, data["balance_median"])
     surrogate_fr.fit(features, data["firing_rate"])
     
     balance_mean = surrogate_balance.predict(challengers_df, return_std=False)

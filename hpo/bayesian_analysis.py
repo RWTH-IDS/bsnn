@@ -2,8 +2,13 @@ from bayesian import *
 from hpo import get_configspace
 import pandas as pd
 
+<<<<<<< HEAD
 results = pd.read_csv("/mnt/data40tb/paessens/sparch_hpo/hpo4/results.csv")
 configspace = get_configspace("hpo4", 42)
+=======
+results = pd.read_csv("/mnt/data40tb/paessens/sparch_hpo/hpo6/results.csv")
+configspace = get_configspace("hpo6", 42, "cue")
+>>>>>>> d62e105 (update hpo script)
 
 BALANCE_CONSTRAINT = 0.5
 FR_CONSTRAINT = 0.05
