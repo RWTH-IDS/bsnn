@@ -32,23 +32,26 @@ def build_exp(config, seed, results_folder, batch_size):
     args.dropout = 0
     args.normalization = "none"
     args.track_balance = True
+    args.balance_metric = "lowpass"
     args.plot = False
     args.batch_size = batch_size
     args.auto_encoder = False
     args.single_spike = True
-    args.repeat = 20
+    args.repeat = 4
     args.dataset_scale = 200
     args.bidirectional = False
     args.balance = True
-    args.n_epochs = 3
+    args.n_epochs = 10
     
-    args.alpha_init = config["alpha"] # Hier stand vorher alpha => Fehler!
     args.fix_w_in = config["fix_w_in"]
     args.fix_w_rec = config["fix_w_rec"]
     args.fix_w_out = config["fix_w_out"]
     args.fix_tau_rec = config["fix_tau_rec"]
     args.fix_tau_out = config["fix_tau_out"]
     args.V_scale = config["V_scale"] 
+    args.slow_dynamics = config["slow_dynamics"]
+    args.V_slow_scale = config["V_slow_scale"]
+    args.balance_refit = config["refit"]
     
     return Experiment(args)
 
@@ -62,13 +65,15 @@ def sample_config(space, data, hpo_args):
 
 
 def get_configspace(name, seed):
-    return CS.ConfigurationSpace(
+    configspace = CS.ConfigurationSpace(
         name = name,
         seed = seed,
         space = {
             "identifier" : CS.Integer("identifier", bounds=(0,2**32-1)),
-            "alpha" : CS.Float("alpha", bounds=(0.95, 0.99999), log=True, default=0.9999),
             "V_scale": CS.Float("V_scale", bounds=(1e-5, 10), log=True, default=1),
+            "slow_dynamics": CS.CategoricalHyperparameter("slow_dynamics", [True, False], default_value=False),
+            "V_slow_scale": CS.Float("V_slow_scale", bounds=(1e-5, 10), log=True, default=1),
+            "refit" : CS.CategoricalHyperparameter("refit", [True, False], default_value=False),
             "fix_w_in" : CS.CategoricalHyperparameter("fix_w_in", [True, False], default_value=False),
             "fix_w_rec" : CS.CategoricalHyperparameter("fix_w_rec", [True, False], default_value=False),
             "fix_w_out" : CS.CategoricalHyperparameter("fix_w_out", [True, False], default_value=False),
@@ -76,19 +81,23 @@ def get_configspace(name, seed):
             "fix_tau_out" : CS.CategoricalHyperparameter("fix_tau_out", [True, False], default_value=False),
         }
     )
+    
+    forbidden_clause = CS.ForbiddenAndConjunction(*[CS.ForbiddenEqualsClause(configspace[fix_], True) for fix_ in ["fix_w_in", "fix_w_rec", "fix_w_out", "fix_tau_rec", "fix_tau_out"]])
+    configspace.add(forbidden_clause)
+    
+    forbidden_clause2 = CS.ForbiddenAndConjunction(*[CS.ForbiddenEqualsClause(configspace[fix_], True) for fix_ in ["fix_w_in", "fix_w_rec", "refit"]])
+    configspace.add(forbidden_clause2)
+        
+    return configspace
 
 
 def main(hpo_args):
     N = hpo_args.n
-    results_folder = "/mnt/data40tb/sparch_hpo/"+ hpo_args.opt_name +"/"
+    results_folder = "/mnt/data40tb/paessens/sparch_hpo/"+ hpo_args.opt_name +"/"
     lock = FileLock(results_folder+"results.csv.lock", timeout=3)
     random = np.random.RandomState(time.time_ns() % 2**32)
     
     configspace = get_configspace(hpo_args.opt_name, hpo_args.config_seed)
-    
-
-    forbidden_clause = CS.ForbiddenAndConjunction(*[CS.ForbiddenEqualsClause(configspace[fix_], True) for fix_ in ["fix_w_in", "fix_w_rec", "fix_w_out", "fix_tau_rec", "fix_tau_out"]])
-    configspace.add(forbidden_clause)
     
     if not os.path.exists(results_folder):
         os.makedirs(results_folder)
@@ -105,6 +114,8 @@ def main(hpo_args):
             
         config = sample_config(configspace, data, hpo_args)
         exp = build_exp(config, seed, results_folder, hpo_args.batch_size)
+        
+        print("CONFIG: ", config)
         
         exp.forward()
         
