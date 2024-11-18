@@ -40,7 +40,7 @@ def exp():
 
     for i in range(args.trials):
         if args.trials > 1:
-            args.seed = i
+            args.seed = i + args.seed
             args.new_exp_folder = os.path.join(new_exp_folder, f"trial_{i}")
 
         # Instantiate class for the desired experiment
