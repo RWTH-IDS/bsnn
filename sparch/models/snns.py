@@ -454,6 +454,7 @@ class RLIFLayer(nn.Module):
         self.V_slow_scale = args.V_slow_scale
         self.slow_dynamics = args.slow_dynamics
         self.reset = args.reset
+        self.w_in_init = args.w_in_init
         
         self.alpha_init = args.alpha_init
         self.mu = args.mu
@@ -485,20 +486,25 @@ class RLIFLayer(nn.Module):
             nn.init.orthogonal_(self.V_slow)
             self.V_slow *= self.V_slow_scale
             self.V_slow.data.fill_diagonal_(0)
-        
-        if self.balance:
+            
+        if self.w_in_init == "bernoulli":
             alpha_scale = (1-self.alpha_init) / 0.001
             self.W.data = torch.bernoulli(torch.full((hidden_size, input_size), 0.7)) * torch.empty(hidden_size, input_size).uniform_(-alpha_scale, alpha_scale)
+        elif self.w_in_init == "uniform":
+            nn.init.uniform_(self.W, -np.sqrt(2/input_size), np.sqrt(2/input_size))
+        else:
+            raise ValueError("Unknown weight initialization method: ", self.w_in_init)
+
+        
+        if self.balance:
             self.V.data = self.W @ self.W.T + self.mu * torch.eye(hidden_size)
-            self.alpha.data = torch.full((hidden_size,), self.alpha_init)
-            
             self.v_thresh = 0.5*(self.nu + self.mu + torch.diagonal(self.V.data))
-                
             self.V.data = -self.V_scale * self.V.data / (1-self.alpha_init)
+            
+            self.alpha.data = torch.full((hidden_size,), self.alpha_init)
         else:
             nn.init.uniform_(self.alpha, self.alpha_lim[0], self.alpha_lim[1])
             nn.init.orthogonal_(self.V)
-            nn.init.uniform_(self.W, -np.sqrt(1/input_size), np.sqrt(1/input_size))
             
             self.v_thresh = torch.full((hidden_size,), 1.0)
             

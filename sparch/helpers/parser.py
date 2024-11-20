@@ -144,6 +144,12 @@ def add_model_options(parser):
         choices=["default", "voltage", "threshold"],
         help="What to reset after each spike. Default will either substract 1 or use the diagonal of V_rec (depending on balance), voltage will subtract the voltage, threshold will subtract the threshold."
     )
+    parser.add_argument(
+        "--w-in-init",
+        default="bernoulli",
+        choices = ["bernoulli", "uniform"],
+        help="How to initialize the input weights"
+    )
     return parser
 
 def add_training_options(parser):
