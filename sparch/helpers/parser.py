@@ -138,6 +138,12 @@ def add_model_options(parser):
         default=False,
         help="If True, the network will add recurrent currents that use a filtered version of the spikes and new, trainable weights"
     )
+    parser.add_argument(
+        "--reset",
+        default="default",
+        choices=["default", "voltage", "threshold"],
+        help="What to reset after each spike. Default will either substract 1 or use the diagonal of V_rec (depending on balance), voltage will subtract the voltage, threshold will subtract the threshold."
+    )
     return parser
 
 def add_training_options(parser):
