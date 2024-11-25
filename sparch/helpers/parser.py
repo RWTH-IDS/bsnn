@@ -150,6 +150,18 @@ def add_model_options(parser):
         choices = ["bernoulli", "uniform"],
         help="How to initialize the input weights"
     )
+    parser.add_argument(
+        "--pruning-epochs",
+        type=int,
+        default=2,
+        help="Number of epochs to prune the network"
+    )
+    parser.add_argument(
+        "--pruning-threshold",
+        type=float,
+        default=0.12,
+        help="Accuracy threshold for pruning"
+    )
     return parser
 
 def add_training_options(parser):

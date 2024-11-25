@@ -131,6 +131,9 @@ class Experiment:
         args.commit = str(repo.head.commit)
         with open(self.exp_folder+"/params.yml", "w") as f:
             yaml.dump(args, f)
+            
+        self.pruning_epochs = args.pruning_epochs
+        self.pruning_threshold = args.pruning_threshold
 
     def forward(self):
         """
@@ -180,6 +183,9 @@ class Experiment:
                     if self.save_best:
                         torch.save(self.net, f"{self.checkpoint_dir}/best_model.pth")
                         logging.info(f"\nBest model saved with valid acc={valid_acc}" + (f" and balance (lp)={valid_balances_low[-1]}" if self.track_balance else ""))
+                        
+                if e > self.pruning_epochs and valid_acc < self.pruning_threshold:
+                    break
 
                 train_accs.append(train_acc)
                 train_frs.append(train_fr)
