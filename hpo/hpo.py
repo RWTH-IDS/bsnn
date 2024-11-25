@@ -37,11 +37,19 @@ def build_exp(config, seed, results_folder, batch_size, dataset):
     args.batch_size = batch_size
     args.auto_encoder = False
     args.single_spike = True
-    args.repeat = 4
-    args.dataset_scale = 1
+    args.repeat = 20
     args.bidirectional = False
     args.balance = True
-    args.n_epochs = 10
+    args.n_epochs = 30
+    args.fix_w_in = False   
+    args.fix_w_rec = False
+    args.fix_w_out = False
+    args.fix_tau_rec = False
+    args.fix_tau_out = False
+    args.slow_dynamics = False
+    args.V_slow_scale = 1
+    args.reset = "threshold"
+    args.w_in_init = "uniform"
     
     if dataset == "cue":
         args.fix_w_in = config["fix_w_in"]
@@ -55,15 +63,8 @@ def build_exp(config, seed, results_folder, batch_size, dataset):
         args.balance_refit = config["refit"]
     elif dataset == "shd":
         args.dataset_folder = "/mnt/data40tb/paessens/datasets/shd/"
-        args.fix_w_in = config["fix_w_in"]
-        args.fix_w_rec = config["fix_w_rec"]
-        args.fix_w_out = config["fix_w_out"]
-        args.fix_tau_rec = config["fix_tau_rec"]
-        args.fix_tau_out = config["fix_tau_out"]
+        args.dataset_scale = config["dataset_scale"]
         args.V_scale = config["V_scale"] 
-        args.slow_dynamics = config["slow_dynamics"]
-        args.V_slow_scale = config["V_slow_scale"]
-        args.balance_refit = config["refit"]
     else:
         raise NotImplementedError("Dataset not implemented")
     
@@ -86,25 +87,16 @@ def get_configspace(name, seed, dataset):
             seed = seed,
             space = {
                 "identifier" : CS.Integer("identifier", bounds=(0,2**32-1)),
-                "V_scale": CS.Float("V_scale", bounds=(1e-5, 10), log=True, default=1),
-                "slow_dynamics": CS.CategoricalHyperparameter("slow_dynamics", [True, False], default_value=False),
-                "V_slow_scale": CS.Float("V_slow_scale", bounds=(1e-5, 10), log=True, default=1),
-                "refit" : CS.CategoricalHyperparameter("refit", [True, False], default_value=False),
-                "fix_w_in" : CS.CategoricalHyperparameter("fix_w_in", [True, False], default_value=False),
-                "fix_w_rec" : CS.CategoricalHyperparameter("fix_w_rec", [True, False], default_value=False),
-                "fix_w_out" : CS.CategoricalHyperparameter("fix_w_out", [True, False], default_value=False),
-                "fix_tau_rec" : CS.CategoricalHyperparameter("fix_tau_rec", [True, False], default_value=False),
-                "fix_tau_out" : CS.CategoricalHyperparameter("fix_tau_out", [True, False], default_value=False),
-                "mu" : CS.Float("mu", bounds=(1e-4, 1e-2), log=True, default=1e-3),
-                "nu" : CS.Float("nu", bounds=(1e-4, 1e-2), log=True, default=1e-3),
+                "V_scale": CS.Float("V_scale", bounds=(1e-2, 1e4), log=True, default=300),
+                "dataset_scale": CS.Float("dataset_scale", bounds=(1e-2, 10), default=0.5),
             }
         )
         
-        forbidden_clause = CS.ForbiddenAndConjunction(*[CS.ForbiddenEqualsClause(configspace[fix_], True) for fix_ in ["fix_w_in", "fix_w_rec", "fix_w_out", "fix_tau_rec", "fix_tau_out"]])
-        configspace.add(forbidden_clause)
+        #forbidden_clause = CS.ForbiddenAndConjunction(*[CS.ForbiddenEqualsClause(configspace[fix_], True) for fix_ in ["fix_w_in", "fix_w_rec", "fix_w_out", "fix_tau_rec", "fix_tau_out"]])
+        #configspace.add(forbidden_clause)
         
-        forbidden_clause2 = CS.ForbiddenAndConjunction(*[CS.ForbiddenEqualsClause(configspace[fix_], True) for fix_ in ["fix_w_in", "fix_w_rec", "refit"]])
-        configspace.add(forbidden_clause2)
+        #forbidden_clause2 = CS.ForbiddenAndConjunction(*[CS.ForbiddenEqualsClause(configspace[fix_], True) for fix_ in ["fix_w_in", "fix_w_rec", "refit"]])
+        #configspace.add(forbidden_clause2)
     
     else:
         raise NotImplementedError("Dataset not implemented")
