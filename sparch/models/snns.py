@@ -577,7 +577,6 @@ class RLIFLayer(nn.Module):
         sim_time = Wx.shape[1]
         device = Wx.device
         self.v = torch.zeros(Wx.shape[0], Wx.shape[1], Wx.shape[2]).to(device)
-        #torch.manual_seed(20)
         ut = torch.zeros(Wx.shape[0], Wx.shape[2]).to(device)
         st = torch.zeros(Wx.shape[0], Wx.shape[2]).to(device)
         r = torch.zeros(Wx.shape[0], Wx.shape[2]).to(device)
@@ -827,7 +826,6 @@ class ReadoutLayer(nn.Module):
         if init_weight is not None:
             self.W.data = init_weight
         else:
-            #torch.manual_seed(20)
             nn.init.uniform_(self.W, -np.sqrt(1/input_size), np.sqrt(1/input_size))
 
         if self.fix_tau_out:
@@ -876,7 +874,6 @@ class ReadoutLayer(nn.Module):
 
         # Initializations
         device = Wx.device
-        #torch.manual_seed(20)
         ut = torch.zeros(Wx.shape[0], Wx.shape[2]).to(device)
         out = torch.zeros(Wx.shape[0], Wx.shape[2]).to(device)
 
