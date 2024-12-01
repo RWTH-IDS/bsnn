@@ -8,8 +8,8 @@ All original functionality is obtained, refer to the original repository for mor
 
 ## Installation
 ```
-git clone git@github.com:thebarnable/sparch.git
-cd sparch
+git clone git@github.com:RWTH-IDS/bsnn.git
+cd bsnn
 pip install -r requirements.txt
 python setup.py install
 ```
